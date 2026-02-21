@@ -1,0 +1,101 @@
+{% extends "layout.html" %}
+
+{% block title %}Profile - Hakeem Inventory{% endblock %}
+{% block page_title %}User Profile{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <!-- Profile Visual Card -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm text-center p-4 h-100">
+            <div class="mb-4">
+                <div class="position-relative d-inline-block">
+                    <img src="https://ui-avatars.com/api/?name={{ user.username }}&background=1e3a8a&color=fff&size=128"
+                        alt="Avatar" class="rounded-4 shadow-sm"
+                        style="width: 120px; height: 120px; object-fit: cover;">
+                    <span
+                        class="position-absolute bottom-0 end-0 bg-success border border-white border-4 rounded-circle p-2"
+                        title="Online Status"></span>
+                </div>
+            </div>
+            <h4 class="fw-bold text-dark mb-1">{{ user.username }}</h4>
+            <p class="text-muted small mb-4">{{ user.role|title }}</p>
+
+            <div class="text-start border-top pt-4">
+                <div class="mb-3">
+                    <label class="text-muted extra-small fw-bold text-uppercase mb-1">Email Address</label>
+                    <div class="fw-medium text-dark">{{ user.email }}</div>
+                </div>
+                <div>
+                    <label class="text-muted extra-small fw-bold text-uppercase mb-1">Member Since</label>
+                    <div class="fw-medium text-dark">{{ user.created_at.strftime('%B %d, %Y') }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Profile Sections -->
+    <div class="col-lg-8">
+        <div class="d-grid gap-4">
+            <!-- Account Information -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3 border-0">
+                    <h5 class="fw-bold mb-0">Identity Settings</h5>
+                </div>
+                <div class="card-body pt-0">
+                    <form method="POST">
+                        <input type="hidden" name="action" value="update_info">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold small">Username</label>
+                                <input type="text" name="username" class="form-control bg-light border-0"
+                                    value="{{ user.username }}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold small">Email Address</label>
+                                <input type="email" name="email" class="form-control bg-light border-0"
+                                    value="{{ user.email }}" required>
+                            </div>
+                        </div>
+                        <div class="text-end mt-4">
+                            <button type="submit" class="btn btn-primary px-4 fw-bold shadow-sm">Save Identity</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Security/Password -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3 border-0">
+                    <h5 class="fw-bold mb-0">Security & Authentication</h5>
+                </div>
+                <div class="card-body pt-0">
+                    <form method="POST">
+                        <input type="hidden" name="action" value="change_password">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold small">Current Password</label>
+                            <input type="password" name="old_password" class="form-control bg-light border-0" required
+                                placeholder="••••••••">
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold small">New Password</label>
+                                <input type="password" name="new_password" class="form-control bg-light border-0"
+                                    required placeholder="••••••••">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold small">Confirm New Password</label>
+                                <input type="password" name="confirm_password" class="form-control bg-light border-0"
+                                    required placeholder="••••••••">
+                            </div>
+                        </div>
+                        <div class="text-end mt-4">
+                            <button type="submit" class="btn btn-outline-primary px-4 fw-bold">Update Password</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

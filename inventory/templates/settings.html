@@ -1,0 +1,94 @@
+{% extends "layout.html" %}
+
+{% block title %}Settings - Hakeem Inventory{% endblock %}
+{% block page_title %}Application Settings{% endblock %}
+
+{% block content %}
+<div class="card border-0 shadow-sm mx-auto" style="max-width: 700px;">
+    <div class="card-header bg-white py-4 border-0 text-center">
+        <h4 class="fw-bold mb-1">Interface Preferences</h4>
+        <p class="text-muted small">Personalize your Hakeem Inventory dashboard experience</p>
+    </div>
+    <div class="card-body px-5 pb-5">
+        <form method="POST">
+            <div class="mb-5">
+                <label class="form-label fw-bold text-dark mb-4">Display Theme</label>
+                <div class="row g-4">
+                    <!-- Light Theme -->
+                    <div class="col-md-6">
+                        <label class="w-100 cursor-pointer">
+                            <input type="radio" name="theme" value="light" {% if not session.get('theme') or
+                                session.get('theme')=='light' %}checked{% endif %} class="btn-check"
+                                onchange="updateThemeStyle(this)">
+                            <div class="theme-option p-4 rounded-4 border-2 text-center transition-all bg-light">
+                                <div class="bg-white shadow-sm rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3"
+                                    style="width: 56px; height: 56px;">
+                                    <i class="fas fa-sun text-warning fa-lg"></i>
+                                </div>
+                                <div class="fw-bold text-dark">Daylight Mode</div>
+                                <div class="text-muted extra-small">Clean & Sharp</div>
+                            </div>
+                        </label>
+                    </div>
+                    <!-- Dark Theme -->
+                    <div class="col-md-6">
+                        <label class="w-100 cursor-pointer">
+                            <input type="radio" name="theme" value="dark" {% if session.get('theme')=='dark' %}checked{%
+                                endif %} class="btn-check" onchange="updateThemeStyle(this)">
+                            <div class="theme-option p-4 rounded-4 border-2 text-center transition-all bg-dark">
+                                <div class="bg-secondary bg-opacity-25 rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3"
+                                    style="width: 56px; height: 56px;">
+                                    <i class="fas fa-moon text-info fa-lg"></i>
+                                </div>
+                                <div class="fw-bold text-white">Nocturnal Mode</div>
+                                <div class="text-white text-opacity-50 extra-small">Deep & Immersive</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-4 rounded-4 bg-primary bg-opacity-10 border border-primary border-opacity-10 mb-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="fw-bold text-primary mb-1">Persistent Settings</h6>
+                        <p class="text-muted extra-small mb-0">Changes are synchronized across all your devices.</p>
+                    </div>
+                    <button type="submit" class="btn btn-primary px-4 fw-bold shadow-sm">Save Preferences</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    .theme-option {
+        border: 3px solid transparent;
+        cursor: pointer;
+    }
+
+    .btn-check:checked+.theme-option {
+        border-color: var(--primary);
+        transform: translateY(-4px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+    }
+
+    .cursor-pointer {
+        cursor: pointer;
+    }
+
+    .transition-all {
+        transition: all 0.2s ease-in-out;
+    }
+</style>
+
+<script>
+    function updateThemeStyle(radio) {
+        if (radio.value === 'dark') {
+            document.body.classList.add('dark-theme');
+        } else {
+            document.body.classList.remove('dark-theme');
+        }
+    }
+</script>
+{% endblock %}

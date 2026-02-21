@@ -1,0 +1,7 @@
+flask
+flask-mysqldb
+python-dotenv
+authlib
+openpyxl
+requests
+werkzeug

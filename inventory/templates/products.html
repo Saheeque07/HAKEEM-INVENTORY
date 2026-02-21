@@ -1,0 +1,238 @@
+{% extends "layout.html" %}
+
+{% block title %}Inventory - Hakeem Inventory{% endblock %}
+{% block page_title %}Inventory Management{% endblock %}
+
+{% block page_actions %}
+{% if session.get('role') == 'admin' %}
+<button onclick="openAddProduct()" class="btn btn-primary d-flex align-items-center shadow-sm">
+    <i class="fas fa-plus me-2"></i>
+    <span>Add New Product</span>
+</button>
+<a href="{{ url_for('export_products') }}" class="btn btn-outline-success ms-2 d-flex align-items-center shadow-sm">
+    <i class="fas fa-file-excel me-2"></i>
+    <span>Export Excel</span>
+</a>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body py-3">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0"><i class="fas fa-search text-muted"></i></span>
+                    <input type="text" class="form-control border-start-0 table-search shadow-none"
+                        data-table-id="productsTable" placeholder="Search by name, category, or ID...">
+                </div>
+            </div>
+            <div class="col-md-6 text-md-end mt-3 mt-md-0">
+                <span class="text-muted small">Total: {{ products|length }} products</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm overflow-hidden">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0" id="productsTable">
+            <thead class="bg-light">
+                <tr>
+                    <th class="ps-4">Preview</th>
+                    <th>Product Details</th>
+                    <th>Category</th>
+                    <th>Price</th>
+                    <th>Stock</th>
+                    <th>Status</th>
+                    {% if session.get('role') == 'admin' %}
+                    <th class="text-end pe-4">Actions</th>
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for product in products %}
+                <tr>
+                    <td class="ps-4">
+                        {% if product.image_url %}
+                        <img src="{{ url_for('static', filename='uploads/' + product.image_url) }}"
+                            alt="{{ product.name }}" class="rounded-3 shadow-sm"
+                            style="width: 50px; height: 50px; object-fit: cover;">
+                        {% else %}
+                        <div class="bg-light rounded-3 d-flex align-items-center justify-content-center text-muted"
+                            style="width: 50px; height: 50px;">
+                            <i class="fas fa-image"></i>
+                        </div>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="fw-bold text-dark">{{ product.name }}</div>
+                        <div class="text-muted extra-small">SKU: #{{ product.id }}</div>
+                    </td>
+                    <td>
+                        <span class="badge bg-primary bg-opacity-10 text-primary px-3">{{ product.category_name
+                            }}</span>
+                    </td>
+                    <td class="fw-semibold text-dark">₹{{ "%.2f"|format(product.price) }}</td>
+                    <td class="fw-bold">{{ product.quantity }}</td>
+                    <td>
+                        {% if product.quantity <= product.low_stock_threshold %} <span
+                            class="badge bg-danger text-white rounded-pill px-3">Low Stock</span>
+                            {% else %}
+                            <span class="badge bg-success text-white rounded-pill px-3">Healthy</span>
+                            {% endif %}
+                    </td>
+                    {% if session.get('role') == 'admin' %}
+                    <td class="text-end pe-4">
+                        <div class="btn-group shadow-sm rounded-3 overflow-hidden">
+                            <a href="{{ url_for('product_view', id=product.id) }}"
+                                class="btn btn-white btn-sm px-3 border" title="View Details">
+                                <i class="fas fa-eye text-primary"></i>
+                            </a>
+                            <button class="btn btn-white btn-sm px-3 border edit-btn" data-id="{{ product.id }}"
+                                data-name="{{ product.name }}" data-category="{{ product.category_id or '' }}"
+                                data-price="{{ product.price }}" data-quantity="{{ product.quantity }}"
+                                data-threshold="{{ product.low_stock_threshold }}"
+                                data-desc="{{ product.description or '' }}" title="Edit Product">
+                                <i class="fas fa-pen text-warning"></i>
+                            </button>
+                            <a href="{{ url_for('delete_product', id=product.id) }}"
+                                class="btn btn-white btn-sm px-3 border" title="Delete"
+                                onclick="return confirm('Archive this product?')">
+                                <i class="fas fa-trash text-danger"></i>
+                            </a>
+                        </div>
+                    </td>
+                    {% endif %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block modals %}
+<!-- Bootstrap 5 Modal -->
+<div class="modal fade" id="productFormModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-primary text-white p-4">
+                <h5 class="modal-title fw-bold" id="modalTitle">Add New Product</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form id="productForm" method="POST" action="{{ url_for('add_product') }}"
+                    enctype="multipart/form-data">
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Product Name</label>
+                            <input type="text" name="name" id="p_name" class="form-control" required
+                                placeholder="Enter item name">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Category</label>
+                            <select name="category_id" id="p_category" class="form-control" required>
+                                <option value="">Select Category</option>
+                                {% for cat in categories %}
+                                <option value="{{ cat.id }}">{{ cat.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Price (₹)</label>
+                            <div class="input-group">
+                                <span class="input-group-text border-end-0 bg-light fw-bold text-muted">₹</span>
+                                <input type="number" step="0.01" name="price" id="p_price"
+                                    class="form-control border-start-0" required placeholder="0.00">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Current Quantity</label>
+                            <input type="number" name="quantity" id="p_quantity" class="form-control" required min="0"
+                                placeholder="0">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Low Stock Alert Level</label>
+                            <input type="number" name="low_stock_threshold" id="p_threshold" class="form-control"
+                                value="10" min="0">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Hero Image</label>
+                            <input type="file" name="image" id="p_image_input" class="form-control"
+                                onchange="previewImage(this)">
+                            <div id="image_preview_container" class="mt-2 text-center" style="display: none;">
+                                <img id="image_preview" src="#" alt="Preview" class="rounded-3 shadow-sm"
+                                    style="max-width: 100px; max-height: 100px; object-fit: cover;">
+                                <p class="extra-small text-muted mt-1">Image Preview</p>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Item Description</label>
+                            <textarea name="description" id="p_description" class="form-control" rows="3"
+                                placeholder="Provide extra details..."></textarea>
+                        </div>
+                        <div class="col-12 mt-4">
+                            <hr class="opacity-25">
+                            <div class="d-flex justify-content-end gap-2">
+                                <button type="button" class="btn btn-outline-secondary px-4"
+                                    data-bs-dismiss="modal">Discard</button>
+                                <button type="submit" class="btn btn-primary px-4 fw-bold" id="submitBtn">Commit
+                                    Changes</button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const modalElement = document.getElementById('productFormModal');
+    const bsModal = new bootstrap.Modal(modalElement);
+    const form = document.getElementById('productForm');
+    const modalTitle = document.getElementById('modalTitle');
+
+    function openAddProduct() {
+        modalTitle.innerText = 'Add New Product';
+        form.action = "{{ url_for('add_product') }}";
+        form.reset();
+        document.getElementById('image_preview_container').style.display = 'none';
+        bsModal.show();
+    }
+
+    function previewImage(input) {
+        const preview = document.getElementById('image_preview');
+        const container = document.getElementById('image_preview_container');
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                preview.src = e.target.result;
+                container.style.display = 'block';
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    document.querySelectorAll('.edit-btn').forEach(btn => {
+        btn.addEventListener('click', function (e) {
+            const button = e.currentTarget;
+
+            modalTitle.innerText = 'Modify Product: ' + button.getAttribute('data-name');
+            form.action = "/products/edit/" + button.getAttribute('data-id');
+            document.getElementById('p_name').value = button.getAttribute('data-name');
+            document.getElementById('p_category').value = button.getAttribute('data-category');
+            document.getElementById('p_price').value = button.getAttribute('data-price');
+            document.getElementById('p_quantity').value = button.getAttribute('data-quantity');
+            document.getElementById('p_threshold').value = button.getAttribute('data-threshold');
+            document.getElementById('p_description').value = button.getAttribute('data-desc');
+            bsModal.show();
+        });
+    });
+</script>
+{% endblock %}

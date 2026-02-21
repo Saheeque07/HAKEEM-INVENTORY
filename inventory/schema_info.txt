@@ -1,0 +1,8 @@
+--- Connection Successful ---
+Table 'wallet_transactions' EXISTS.
+{'Field': 'id', 'Type': 'int', 'Null': 'NO', 'Key': 'PRI', 'Default': None, 'Extra': 'auto_increment'}
+{'Field': 'user_id', 'Type': 'int', 'Null': 'YES', 'Key': 'MUL', 'Default': None, 'Extra': ''}
+{'Field': 'amount', 'Type': 'decimal(10,2)', 'Null': 'NO', 'Key': '', 'Default': None, 'Extra': ''}
+{'Field': 'transaction_type', 'Type': 'varchar(50)', 'Null': 'YES', 'Key': '', 'Default': 'Payment', 'Extra': ''}
+{'Field': 'status', 'Type': 'varchar(50)', 'Null': 'YES', 'Key': '', 'Default': 'Success', 'Extra': ''}
+{'Field': 'created_at', 'Type': 'timestamp', 'Null': 'YES', 'Key': '', 'Default': 'CURRENT_TIMESTAMP', 'Extra': 'DEFAULT_GENERATED'}

@@ -1,0 +1,114 @@
+{% extends "layout.html" %}
+
+{% block title %}Reports - Hakeem Inventory{% endblock %}
+{% block page_title %}Inventory Reports & Analytics{% endblock %}
+
+{% block page_actions %}
+<a href="{{ url_for('export_products') }}" class="btn btn-outline-success d-flex align-items-center shadow-sm">
+    <i class="fas fa-file-excel me-2"></i>
+    <span>Export Inventory</span>
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="row g-4 mb-4">
+    <!-- Inventory Value Card -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-lg h-100 overflow-hidden"
+            style="background: linear-gradient(135deg, var(--primary), var(--accent));">
+            <div class="card-body p-4 text-white">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div class="stats-icon bg-white bg-opacity-20 rounded-3 p-3">
+                        <i class="fas fa-calculator fa-lg"></i>
+                    </div>
+                    <span class="badge bg-white bg-opacity-25 text-white">Portfolio Value</span>
+                </div>
+                <h6 class="text-white text-opacity-75 fw-medium mb-1">Total Estimated Worth</h6>
+                <h1 class="fw-bold mb-3">₹{{ "{:,.2f}".format(total_value) }}</h1>
+                <div class="small text-white text-opacity-75">
+                    <i class="fas fa-info-circle me-1"></i> Based on unit prices & stock levels
+                </div>
+            </div>
+            <div class="bg-black bg-opacity-10 py-2 px-4">
+                <span class="extra-small text-white text-opacity-50">Real-time valuation</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Category Distribution -->
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white py-3 border-0">
+                <h5 class="fw-bold mb-0">Product Concentration</h5>
+            </div>
+            <div class="card-body pt-0">
+                <div class="row g-3">
+                    {% for stat in category_stats %}
+                    <div class="col-md-4">
+                        <div class="p-3 rounded-4 bg-light border border-light h-100">
+                            <div class="text-muted extra-small fw-bold text-uppercase mb-2">{{ stat.name }}</div>
+                            <div class="d-flex justify-content-between align-items-end">
+                                <h3 class="fw-bold mb-0 text-dark">{{ stat.product_count }}</h3>
+                                <div class="text-primary small fw-medium">Items</div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Low Stock Details -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
+        <div>
+            <h5 class="fw-bold mb-0">Inventory Alerts</h5>
+            <p class="text-muted extra-small mb-0">Actions required for items below safety threshold</p>
+        </div>
+        {% if low_stock_products %}
+        <span class="badge bg-danger rounded-pill px-3">{{ low_stock_products|length }} Critical Issues</span>
+        {% endif %}
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="bg-light">
+                <tr>
+                    <th class="ps-4">Product Name</th>
+                    <th class="text-center">Current Level</th>
+                    <th class="text-center">Min. Required</th>
+                    <th class="text-end pe-4">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in low_stock_products %}
+                <tr>
+                    <td class="ps-4 fw-bold text-dark">{{ p.name }}</td>
+                    <td class="text-center">
+                        <span class="text-danger fw-bold h5 mb-0">{{ p.quantity }}</span>
+                    </td>
+                    <td class="text-center text-muted fw-medium">{{ p.low_stock_threshold }}</td>
+                    <td class="text-end pe-4">
+                        <span class="badge bg-danger-subtle text-danger border border-danger border-opacity-10 px-3">
+                            <i class="fas fa-exclamation-triangle me-1"></i> Stock Low
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+                {% if not low_stock_products %}
+                <tr>
+                    <td colspan="4" class="text-center py-5">
+                        <div class="opacity-50 mb-3">
+                            <i class="fas fa-check-circle fa-4x text-success"></i>
+                        </div>
+                        <h6 class="fw-bold text-muted">Stock Fully Optimized</h6>
+                        <p class="text-muted small">All items are above their safety thresholds.</p>
+                    </td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,406 @@
+{% extends "layout.html" %}
+
+{% block title %}Dashboard - Hakeem Inventory{% endblock %}
+{% block page_title %}Overview{% endblock %}
+
+{% block content %}
+<!-- Main Stats -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="card h-100 border-0 shadow-sm" style="border-left: 5px solid var(--primary) !important;">
+            <div class="card-body p-4">
+                <h6 class="text-muted fw-semi-bold mb-1">Total Sales</h6>
+                <h2 class="fw-bold mb-0 text-dark">₹{{ "{:,.2f}".format(total_sales) }}</h2>
+                <div class="mt-2"><span class="badge bg-success-subtle text-success">+12% from last month</span></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card h-100 border-0 shadow-sm" style="border-left: 5px solid #6366f1 !important;">
+            <div class="card-body p-4">
+                <h6 class="text-muted fw-semi-bold mb-1">Wallet Balance</h6>
+                <h2 class="fw-bold mb-0 text-dark">₹{{ "{:,.2f}".format(wallet_balance) }}</h2>
+                <div class="mt-2"><a href="{{ url_for('wallet') }}"
+                        class="badge bg-indigo-subtle text-primary text-decoration-none">Manage Wallet</a></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card h-100 border-0 shadow-sm" style="border-left: 5px solid var(--danger) !important;">
+            <div class="card-body p-4">
+                <h6 class="text-muted fw-semi-bold mb-1">Outstanding Dues</h6>
+                <h2 class="fw-bold mb-0 text-dark text-danger">₹{{ "{:,.2f}".format(outstanding_dues) }}</h2>
+                <div class="mt-2"><span class="badge bg-danger-subtle text-danger">Pending Payments</span></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card h-100 border-0 shadow-sm" style="border-left: 5px solid var(--warning) !important;">
+            <div class="card-body p-4">
+                <h6 class="text-muted fw-semi-bold mb-1">Low Stock Alerts</h6>
+                <h2 class="fw-bold mb-0 text-dark">{{ stats.low_stock_count }}</h2>
+                <div class="mt-2"><span class="badge bg-warning-subtle text-warning">Restock Needed</span></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Section -->
+<div class="row g-4 mb-4">
+    <!-- Bar Chart -->
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold mb-0"><i class="fas fa-chart-bar me-2 text-primary"></i>Stock Analytics</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="stockBarChart" style="height: 300px;"></canvas>
+            </div>
+        </div>
+    </div>
+    <!-- Pie Chart -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white py-3 border-0">
+                <h5 class="fw-bold mb-0"><i class="fas fa-chart-pie me-2 text-success"></i>Inventory Health</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="categoryPieChart" style="height: 300px;"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Transaction Section -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="fw-bold mb-0">Quick Transaction</h5>
+                    <div class="btn-group" role="group">
+                        <button class="btn btn-primary px-4 fw-bold rounded-start" id="btn-sale-view">New Sale</button>
+                        <button class="btn btn-outline-primary px-4 fw-bold rounded-end" id="btn-purchase-view">New
+                            Purchase</button>
+                    </div>
+                </div>
+
+                <!-- Sale Form (Visible by default) -->
+                <div id="quick-sale-form">
+                    <form action="{{ url_for('add_sale') }}" method="POST">
+                        <div class="row g-3 align-items-end">
+                            <div class="col-md-3">
+                                <label class="small fw-bold text-muted mb-1">Customer</label>
+                                <select name="customer_id" class="form-select bg-light border-0 searchable-select"
+                                    required id="customerSelect">
+                                    <option value="">Select Customer</option>
+                                    {% for c in customers %}<option value="{{ c.id }}">{{ c.name }}</option>{% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="small fw-bold text-muted mb-1">Method</label>
+                                <select name="method" class="form-select bg-light border-0" required>
+                                    <option value="Cash">Cash</option>
+                                    <option value="Hand Cash">Hand Cash</option>
+                                    <option value="Online">Online / UPI</option>
+                                    <option value="PhonePe">PhonePe Wallet</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="small fw-bold text-muted mb-1">Total</label>
+                                <input type="number" name="total" step="0.01" class="form-control bg-light border-0"
+                                    placeholder="0.00" required>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="small fw-bold text-muted mb-1">Paid</label>
+                                <input type="number" name="paid" step="0.01" class="form-control bg-light border-0"
+                                    placeholder="0.00" required>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="submit" class="btn btn-primary w-100 fw-bold">Execute Sale</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Purchase Form (Hidden by default) -->
+                <div id="quick-purchase-form" class="d-none">
+                    <form action="{{ url_for('add_purchase') }}" method="POST">
+                        <div class="row g-3 align-items-end">
+                            <div class="col-md-3">
+                                <label class="small fw-bold text-muted mb-1">Supplier</label>
+                                <select name="supplier_id" class="form-select bg-light border-0 searchable-select"
+                                    required id="supplierSelect">
+                                    <option value="">Select Supplier</option>
+                                    {% for s in suppliers %}<option value="{{ s.id }}">{{ s.name }}</option>{% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="small fw-bold text-muted mb-1">Method</label>
+                                <select name="method" class="form-select bg-light border-0" required>
+                                    <option value="Cash">Cash</option>
+                                    <option value="Hand Cash">Hand Cash</option>
+                                    <option value="Online">Online / UPI</option>
+                                    <option value="Bank Transfer">Bank Transfer</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="small fw-bold text-muted mb-1">Total</label>
+                                <input type="number" name="total" step="0.01" class="form-control bg-light border-0"
+                                    placeholder="0.00" required>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="small fw-bold text-muted mb-1">Paid</label>
+                                <input type="number" name="paid" step="0.01" class="form-control bg-light border-0"
+                                    placeholder="0.00" required>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="submit" class="btn btn-success w-100 fw-bold">Execute Purchase</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- PhonePe Payment Modal -->
+<div class="modal fade" id="phonePeModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-primary text-white border-0">
+                <h5 class="modal-title fw-bold"><i class="fas fa-wallet me-2"></i>PhonePe Payment</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center p-4">
+                <div class="mb-4 position-relative">
+                    <div
+                        class="qr-scanner-frame p-3 border border-3 border-primary rounded-3 d-inline-block position-relative">
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=HakeemInventoryPayment"
+                            alt="PhonePe QR" class="img-fluid rounded" id="paymentQR">
+                        <div class="scanner-line"></div>
+                    </div>
+                </div>
+                <h4 class="fw-bold mb-2">₹<span id="scanAmount">0.00</span></h4>
+                <p class="text-muted small mb-4">Scan using PhonePe app to complete payment</p>
+
+                <div id="paymentStatus"
+                    class="alert alert-light border d-flex align-items-center justify-content-center gap-2">
+                    <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                    <span class="text-primary fw-medium">Waiting for payment...</span>
+                </div>
+            </div>
+            <div class="modal-footer border-0 justify-content-center pb-4">
+                <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary rounded-pill px-4" onclick="simulatePaymentSuccess()">
+                    <i class="fas fa-check-circle me-2"></i>Simulate Success
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <style>
+        .qr-scanner-frame {
+            background: #fff;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .scanner-line {
+            position: absolute;
+            width: 100%;
+            height: 3px;
+            background: #673ab7;
+            /* PhonePe Purple */
+            top: 0;
+            left: 0;
+            animation: scan 2s infinite linear;
+            box-shadow: 0 0 4px #673ab7;
+            opacity: 0.7;
+        }
+
+        @keyframes scan {
+            0% {
+                top: 0;
+            }
+
+            50% {
+                top: 100%;
+            }
+
+            100% {
+                top: 0;
+            }
+        }
+
+
+        /* Tom Select Customization */
+        .ts-control {
+            background-color: var(--bs-light) !important;
+            border: 0 !important;
+            border-radius: var(--bs-border-radius);
+            padding: 0.6rem 0.75rem;
+            box-shadow: none !important;
+        }
+
+        .ts-dropdown {
+            border: 0 !important;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            border-radius: 0.5rem;
+            z-index: 1050;
+        }
+
+        .card {
+            border: none !important;
+            border-radius: 12px !important;
+            transition: transform 0.2s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn {
+            border-radius: 8px !important;
+            padding: 10px 20px;
+        }
+    </style>
+
+
+
+    {% endblock %}
+
+    {% block extra_js %}
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Initialize Tom Select
+            const tomSelects = {};
+            document.querySelectorAll('.searchable-select').forEach((el) => {
+                try {
+                    tomSelects[el.id || el.name] = new TomSelect(el, {
+                        create: false,
+                        sortField: {
+                            field: "text",
+                            direction: "asc"
+                        },
+                        plugins: ['dropdown_input'],
+                        maxOptions: null
+                    });
+                } catch (e) {
+                    console.error("Tom Select Error:", e);
+                }
+            });
+
+            // Quick Transaction Toggle
+            const btnSaleView = document.getElementById('btn-sale-view');
+            const btnPurchaseView = document.getElementById('btn-purchase-view');
+            const quickSaleForm = document.getElementById('quick-sale-form');
+            const quickPurchaseForm = document.getElementById('quick-purchase-form');
+
+            if (btnSaleView && btnPurchaseView) {
+                btnSaleView.addEventListener('click', () => {
+                    quickSaleForm.classList.remove('d-none');
+                    quickPurchaseForm.classList.add('d-none');
+                    btnSaleView.classList.replace('btn-outline-primary', 'btn-primary');
+                    btnPurchaseView.classList.replace('btn-primary', 'btn-outline-primary');
+                });
+
+                btnPurchaseView.addEventListener('click', () => {
+                    quickPurchaseForm.classList.remove('d-none');
+                    quickSaleForm.classList.add('d-none');
+                    btnPurchaseView.classList.replace('btn-outline-primary', 'btn-primary');
+                    btnSaleView.classList.replace('btn-primary', 'btn-outline-primary');
+                });
+            }
+
+            // Charts
+            const chartData = JSON.parse('{{ chart_data | tojson | safe }}');
+
+            const barCtx = document.getElementById('stockBarChart');
+            if (barCtx) {
+                new Chart(barCtx.getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: chartData.bar_labels,
+                        datasets: [{
+                            label: 'Stock Quantity',
+                            data: chartData.bar_values,
+                            backgroundColor: 'rgba(59, 130, 246, 0.6)',
+                            borderColor: 'rgb(59, 130, 246)',
+                            borderWidth: 1,
+                            borderRadius: 5
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false }
+                });
+            }
+
+            const pieCtx = document.getElementById('categoryPieChart');
+            if (pieCtx) {
+                new Chart(pieCtx.getContext('2d'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: chartData.pie_labels,
+                        datasets: [{
+                            data: chartData.pie_values,
+                            backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+                });
+            }
+
+            // PhonePe Integration
+            const mainSaleForm = document.querySelector('form[action$="add_sale"]');
+            const phonePeMod = document.getElementById('phonePeModal');
+            let phonePeModal = null;
+            if (phonePeMod) {
+                phonePeModal = new bootstrap.Modal(phonePeMod);
+            }
+            let isPhonePeVerified = false;
+
+            if (mainSaleForm && phonePeModal) {
+                mainSaleForm.addEventListener('submit', function (e) {
+                    const method = this.querySelector('[name="method"]').value;
+                    const amount = this.querySelector('[name="paid"]').value;
+
+                    if (method === 'PhonePe' && !isPhonePeVerified) {
+                        e.preventDefault();
+                        document.getElementById('scanAmount').textContent = parseFloat(amount || 0).toFixed(2);
+
+                        // Reset State
+                        const statusDiv = document.getElementById('paymentStatus');
+                        statusDiv.className = "alert alert-light border d-flex align-items-center justify-content-center gap-2";
+                        statusDiv.innerHTML = `
+                            <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                            <span class="text-primary fw-medium">Waiting for payment...</span>
+                        `;
+
+                        phonePeModal.show();
+                    }
+                });
+            }
+
+            window.simulatePaymentSuccess = function () {
+                const statusDiv = document.getElementById('paymentStatus');
+                statusDiv.className = "alert alert-success border-success d-flex align-items-center justify-content-center gap-2";
+                statusDiv.innerHTML = `
+                    <i class="fas fa-check-circle text-success"></i>
+                    <span class="text-success fw-bold">Payment Verified!</span>
+                `;
+
+                setTimeout(() => {
+                    isPhonePeVerified = true;
+                    if (phonePeModal) phonePeModal.hide();
+                    if (mainSaleForm) mainSaleForm.submit();
+                }, 1000);
+            };
+        });
+    </script>
+    {% endblock %}

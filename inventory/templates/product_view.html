@@ -1,0 +1,92 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ product.name }} - Hakeem Inventory{% endblock %}
+{% block page_title %}Product Details{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <a href="{{ url_for('products') }}" class="btn btn-outline-secondary d-inline-flex align-items-center">
+        <i class="fas fa-arrow-left me-2"></i>
+        <span>Back to Inventory</span>
+    </a>
+</div>
+
+<div class="row g-4">
+    <!-- Product Identity Card -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm overflow-hidden h-100">
+            <div class="p-4 bg-light d-flex align-items-center justify-content-center" style="height: 300px;">
+                {% if product.image_url %}
+                <img src="{{ url_for('static', filename='uploads/' + product.image_url) }}" alt="{{ product.name }}"
+                    class="img-fluid rounded-3 shadow-sm" style="max-height: 100%; object-fit: contain;">
+                {% else %}
+                <div class="text-center text-muted opacity-25">
+                    <i class="fas fa-image fa-6x mb-3"></i>
+                    <p class="mb-0">No Preview Available</p>
+                </div>
+                {% endif %}
+            </div>
+            <div class="card-body p-4 text-center">
+                <span class="badge bg-primary bg-opacity-10 text-primary px-3 mb-3">{{ product.category_name or
+                    'General' }}</span>
+                <h3 class="fw-bold text-dark">{{ product.name }}</h3>
+                <p class="text-muted small">Unique ID: #{{ product.id }}</p>
+                <div class="display-6 fw-bold text-primary mt-3">₹{{ "{:,.2f}".format(product.price) }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Product Analytics & Info -->
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold mb-0">Detailed Statistics</h5>
+                {% if session.get('role') == 'admin' %}
+                <a href="{{ url_for('stock') }}" class="btn btn-primary btn-sm px-3">
+                    <i class="fas fa-plus me-2"></i>Manage Stock
+                </a>
+                {% endif %}
+            </div>
+            <div class="card-body p-4">
+                <div class="row g-4 mb-4">
+                    <div class="col-md-6">
+                        <div
+                            class="p-4 rounded-4 bg-light border-start border-4 {{ 'border-success' if product.quantity > product.low_stock_threshold else 'border-danger' }}">
+                            <div class="text-muted small fw-bold text-uppercase mb-1">Stock Availability</div>
+                            <div class="d-flex align-items-baseline">
+                                <h3 class="fw-bold mb-0 me-2">{{ product.quantity }}</h3>
+                                <span class="text-muted">Units available</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="p-4 rounded-4 bg-light border-start border-4 border-warning">
+                            <div class="text-muted small fw-bold text-uppercase mb-1">Alert Threshold</div>
+                            <div class="d-flex align-items-baseline">
+                                <h3 class="fw-bold mb-0 me-2">{{ product.low_stock_threshold }}</h3>
+                                <span class="text-muted">Min levels</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <h6 class="fw-bold text-dark mb-3">About this product</h6>
+                    <div class="p-4 rounded-4 bg-light text-muted" style="min-height: 120px; line-height: 1.6;">
+                        {{ product.description or 'No formal description has been provided for this product.
+                        High-quality inventory item tracked in Stockify.' }}
+                    </div>
+                </div>
+
+                <div class="d-flex align-items-center pt-3 border-top">
+                    <div class="bg-info bg-opacity-10 text-info rounded-circle p-2 me-3">
+                        <i class="far fa-calendar-check"></i>
+                    </div>
+                    <span class="text-muted small">Registration Date: <span class="text-dark fw-medium">{{
+                            product.created_at.strftime('%A, %B %d, %Y') }}</span></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
