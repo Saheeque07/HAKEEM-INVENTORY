@@ -5,3 +5,4 @@ authlib
 openpyxl
 requests
 werkzeug
+gunicorn==25.1.0
